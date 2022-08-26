@@ -1,33 +1,47 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import './App.css'
+import { useState, useRef, createContext} from 'react';
+import { v4 as uuidv4 } from 'uuid';
+import TodoList from './TodoList';
+import './App.css';
+
+export const TodosContext = createContext();
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [todos, setTodos] = useState([]);
+
+  const todoNameRef = useRef();
+
+  const handleAddTodo = () => {
+    const name = todoNameRef.current.value;
+    if(name != '') {
+      setTodos((prevTodos) => {
+        return [...prevTodos, {id: uuidv4(), name: name, completed: false}]
+      });
+      todoNameRef.current.value = null;
+    }
+  }
+
+  const toggleCompleted = (id) => {
+    const newTodos = [...todos];
+    const todo = newTodos.find((todo) => todo.id == id);
+    todo.completed = !todo.completed;
+    setTodos(newTodos);
+  }
+
+  const handleClear = () => {
+    const newTodos = todos.filter((todo) => !todo.completed);
+    setTodos(newTodos);
+  }
 
   return (
-    <div className="App">
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </div>
+    <>
+      <input type="text" ref={ todoNameRef } />
+      <button onClick={ handleAddTodo }>タスクを追加</button>
+      <button onClick={ handleClear }>完了したタスクの削除</button>
+      <TodosContext.Provider value={ todos } >
+        <TodoList toggleCompleted={ toggleCompleted }/>
+      </TodosContext.Provider>
+      <div>残りのタスク: { todos.filter((todo) => !todo.completed).length }</div>
+    </>
   )
 }
 
